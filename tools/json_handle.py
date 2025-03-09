@@ -3,6 +3,9 @@ import re
 import os
 from html import unescape
 
+# JSON文件路径
+json_file = "雨课堂文档/exam_data.json"
+
 def clean_html(text):
     """清理HTML标签并保留基本格式"""
     # 移除段落标签
@@ -15,7 +18,7 @@ def clean_html(text):
     text = re.sub(r'\s+', ' ', text).strip()
     return text
 
-def extract_problems(json_file, reorder_options=False):
+def extract_problems(json_file,reorder_options=False):
     """从JSON文件中提取问题"""
     with open(json_file, 'r', encoding='utf-8') as f:
         data = json.load(f)
@@ -78,9 +81,7 @@ if __name__ == "__main__":
     
     reorder_options = (whether_order == 'y')
 
-    json_file = input("请输入JSON文件路径 (直接回车使用默认路径 'show_paper.json'): ")
-    if not json_file:
-        json_file = "show_paper.json"
+
     
     if os.path.exists(json_file):
         extract_problems(json_file, reorder_options)
