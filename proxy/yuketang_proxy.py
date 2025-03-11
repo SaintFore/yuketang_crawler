@@ -3,13 +3,20 @@ import os
 import json
 import sys
 
-# 雨课堂试卷id
-id = ""
-# 尝试从命令行或环境变量获取ID
-if "EXAM_ID" in os.environ:
-    id = os.environ["EXAM_ID"]
-else:
-    id = input("请输入雨课堂试卷id: ")
+# 从环境变量获取试卷ID
+id = os.environ.get("EXAM_ID", "")
+
+# # 如果通过命令行参数传入，则优先使用命令行参数
+# if len(sys.argv) > 1:
+#     id = sys.argv[1]
+
+# 尝试从标准输入读取（如果环境变量和命令行参数都没有设置）
+if not id:
+    try:
+        print("请输入雨课堂试卷id: ", end="", flush=True)
+        id = input().strip()
+    except:
+        pass
 
 if not id:
     print("未输入试卷id，退出程序")
@@ -17,6 +24,10 @@ if not id:
 
 # 目标URL
 TARGET_URL = "examination.xuetangx.com/exam_room/show_paper?exam_id=" + id
+
+
+# 打印当前使用的试卷ID
+print(f"[配置] 当前使用的试卷ID: {id}")
 
 class TargetCapture:
     def __init__(self):

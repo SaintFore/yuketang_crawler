@@ -1,4 +1,5 @@
 import os
+import time
 import customtkinter as ctk
 from tools.json_handle import extract_problems
 from utils.stdout_redirector import redirect_to_widget, restore_stdout
@@ -122,23 +123,33 @@ class YuketangApp(ctk.CTk):
             
         self.update_status("正在启动代理...", "orange")
         
+        # 重定向输出前先确保控制台可见
+        self.console.configure(state="normal")
+        self.console.delete("0.0", "end")
+        self.console.insert("end", f"==== 启动代理会话 [{time.strftime('%H:%M:%S')}] ====\n")
+        self.console.insert("end", f"试卷ID: {exam_id}\n")
+        self.console.insert("end", "正在启动代理...\n")
+        self.console.configure(state="disabled")
+        
         # 重定向输出
         self.old_stdout = redirect_to_widget(self.console)
         
-        # 清空控制台
-        self.console.configure(state="normal")
-        self.console.delete("0.0", "end")
-        self.console.configure(state="disabled")
-        
         # 启动代理
         ProxyManager.start_proxy(exam_id, self.update_status)
+        
+        # 添加一些反馈，确认代理已启动
+        self.console.configure(state="normal")
+        self.console.insert("end", "\n代理已启动，正在等待连接...\n")
+        self.console.insert("end", "请在浏览器中配置代理：127.0.0.1:11000\n")
+        self.console.insert("end", "然后访问雨课堂试卷页面...\n")
+        self.console.configure(state="disabled")
     
     def process_json(self):
         """处理JSON数据并提取试卷内容"""
         self.update_status("正在处理JSON数据...", "orange")
         
         # 重定向输出
-        self.old_stdout = redirect_to_widget(self.console)
+        redirect_info = redirect_to_widget(self.console)
         
         # 清空控制台
         self.console.configure(state="normal")
@@ -158,9 +169,8 @@ class YuketangApp(ctk.CTk):
         except Exception as e:
             self.update_status(f"处理JSON时出错: {e}", "red")
         finally:
-            if self.old_stdout:
-                restore_stdout(self.old_stdout)
-                self.old_stdout = None
+            if redirect_info:
+                restore_stdout(redirect_info)
     
     def update_status(self, message, color="black"):
         """更新状态标签"""
