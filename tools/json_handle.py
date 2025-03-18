@@ -6,6 +6,9 @@ from html import unescape
 # JSON文件路径
 json_file = "雨课堂文档/exam_data.json"
 
+# 保存路径
+output_dir = "处理后的文档"
+
 def clean_html(text):
     """清理HTML标签并保留基本格式"""
     # 移除段落标签
@@ -25,8 +28,12 @@ def extract_problems(json_file,reorder_options=False):
     
     title = data['data']['title']
     problems = data['data']['problems']
+
+    # 确保输出目录存在
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
     
-    output_file = f"{title}.md"
+    output_file = os.path.join(output_dir, f"{title}.md")
     
     with open(output_file, 'w', encoding='utf-8') as f:
         f.write(f"# {title}\n\n")
