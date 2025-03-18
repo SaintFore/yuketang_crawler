@@ -1,3 +1,9 @@
+# Byte-compiled / optimized / DLL files
 __pycache__/
+
+# logs
 logs/proxy.log
+
+# 保存的文档
 雨课堂文档/
+处理后的文档/

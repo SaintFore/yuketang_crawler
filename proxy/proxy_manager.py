@@ -3,9 +3,59 @@ import subprocess
 import threading
 import time
 import sys
+import socket
+import platform
 
 class ProxyManager:
     """管理mitmproxy代理进程"""
+    
+    # 添加类变量来存储当前运行的进程
+    current_process = None
+    default_port = 11000
+    
+    @staticmethod
+    def is_port_in_use(port):
+        """检查端口是否被占用"""
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                return s.connect_ex(('127.0.0.1', port)) == 0
+        except:
+            return False
+    
+    @staticmethod
+    def kill_process_by_port(port):
+        """终止占用指定端口的进程"""
+        try:
+            # Windows系统
+            cmd = f"netstat -ano | findstr :{port}"
+            result = subprocess.check_output(cmd, shell=True).decode("gbk", errors="ignore")
+            
+            if result:
+                lines = result.strip().split('\n')
+                pids = set()
+                for line in lines:
+                    if f":{port}" in line and "LISTENING" in line:
+                        parts = line.strip().split()
+                        if len(parts) >= 5:
+                            pid = parts[-1]
+                            pids.add(pid)
+                
+                for pid in pids:
+                    sys.stdout.write(f"[端口] 正在终止占用端口 {port} 的进程 (PID: {pid})\n")
+                    sys.stdout.flush()
+                    try:
+                        subprocess.run(f"taskkill /F /PID {pid}", shell=True)
+                        sys.stdout.write(f"[端口] 已终止 PID: {pid}\n")
+                    except:
+                        sys.stdout.write(f"[端口] 终止 PID: {pid} 失败\n")
+                
+                return len(pids) > 0
+            
+            return False
+        except Exception as e:
+            sys.stdout.write(f"[错误] 终止占用端口进程时出错: {str(e)}\n")
+            sys.stdout.flush()
+            return False
     
     @staticmethod
     def start_proxy(exam_id, status_callback=None):
@@ -18,6 +68,29 @@ class ProxyManager:
         """
         def run_proxy():
             try:
+                # 检查端口是否被占用
+                port = ProxyManager.default_port
+                if ProxyManager.is_port_in_use(port):
+                    sys.stdout.write(f"[警告] 端口 {port} 已被占用，尝试终止占用进程...\n")
+                    sys.stdout.flush()
+                    
+                    if status_callback:
+                        status_callback(f"端口 {port} 被占用，正在尝试终止...", "orange")
+                    
+                    # 尝试终止占用进程
+                    if ProxyManager.kill_process_by_port(port):
+                        sys.stdout.write(f"[端口] 已尝试终止占用端口 {port} 的进程\n")
+                        # 等待端口释放
+                        time.sleep(1)
+                    
+                    # 再次检查端口是否被释放
+                    if ProxyManager.is_port_in_use(port):
+                        sys.stdout.write(f"[错误] 端口 {port} 仍然被占用，无法启动代理\n")
+                        sys.stdout.flush()
+                        if status_callback:
+                            status_callback(f"端口 {port} 仍然被占用，请手动关闭占用进程", "red")
+                        return
+                
                 # 直接向控制台输出信息
                 sys.stdout.write(f"[开始] 正在启动代理，试卷ID: {exam_id}...\n")
                 sys.stdout.flush()
@@ -58,7 +131,7 @@ class ProxyManager:
                 sys.stdout.flush()
                 
                 # 启动代理进程
-                cmd = [mitmdump_path, "-s", script_path, "-p", "11000"]
+                cmd = [mitmdump_path, "-s", script_path, "-p", str(port)]
                 sys.stdout.write(f"[执行] 命令: {' '.join(cmd)}\n")
                 sys.stdout.flush()
                 
@@ -78,12 +151,19 @@ class ProxyManager:
                         env=env
                     )
                     
+                    # 保存进程引用到类变量
+                    ProxyManager.current_process = process
+                    
                     sys.stdout.write("[状态] mitmdump进程已启动\n")
                     sys.stdout.flush()
                     f.write("[状态] mitmdump进程已启动\n")
                     
                     # 读取并显示输出
                     for line in process.stdout:
+                        # 如果进程已被终止，退出循环
+                        if ProxyManager.current_process is None:
+                            break
+                        
                         line_text = line.strip()
                         # 同时写入到日志文件
                         f.write(f"{line_text}\n")
@@ -94,6 +174,9 @@ class ProxyManager:
                         
                         if "已保存至" in line_text and status_callback:
                             status_callback("JSON数据已保存，可以提取试卷内容", "green")
+                    
+                    if process.poll() is None:
+                        process.terminate()
                     
                     process.wait()
                     sys.stdout.write("[结束] mitmdump进程已退出\n")
@@ -120,3 +203,57 @@ class ProxyManager:
         thread.start()
         
         return thread
+    
+    @staticmethod
+    def stop_proxy(status_callback=None):
+        """
+        停止当前运行的代理进程
+        
+        参数:
+            status_callback (function): 状态更新回调函数
+        """
+        try:
+            if ProxyManager.current_process:
+                sys.stdout.write("[终止] 正在终止代理进程...\n")
+                sys.stdout.flush()
+                
+                # 尝试优雅地终止进程
+                try:
+                    ProxyManager.current_process.terminate()
+                    time.sleep(0.5)
+                except:
+                    pass
+                
+                # 如果进程仍在运行，强制终止
+                if ProxyManager.current_process.poll() is None:
+                    if platform.system() == "Windows":
+                        subprocess.run(["taskkill", "/F", "/T", "/PID", str(ProxyManager.current_process.pid)], 
+                                       shell=True, stderr=subprocess.DEVNULL)
+                    else:
+                        ProxyManager.current_process.kill()
+                
+                # 清空当前进程引用
+                ProxyManager.current_process = None
+                
+                sys.stdout.write("[终止] 代理进程已终止\n")
+                sys.stdout.flush()
+                
+                if status_callback:
+                    status_callback("代理已终止", "orange")
+                return True
+            else:
+                sys.stdout.write("[终止] 没有正在运行的代理进程\n")
+                sys.stdout.flush()
+                
+                if status_callback:
+                    status_callback("没有正在运行的代理进程", "orange")
+                return False
+                
+        except Exception as e:
+            error_msg = f"终止代理时出错: {str(e)}"
+            sys.stdout.write(f"[异常] {error_msg}\n")
+            sys.stdout.flush()
+            
+            if status_callback:
+                status_callback(error_msg, "red")
+            return False

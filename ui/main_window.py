@@ -76,10 +76,25 @@ class YuketangApp(ctk.CTk):
                                      font=ctk.CTkFont(size=16))
         self.step2_label.grid(row=3, column=0, padx=20, pady=(20, 5), sticky="w")
         
-        self.start_proxy_button = ctk.CTkButton(self.main_frame, 
+        # 创建一个包含启动和终止按钮的框架
+        self.proxy_buttons_frame = ctk.CTkFrame(self.main_frame)
+        self.proxy_buttons_frame.grid(row=4, column=0, padx=20, pady=5, sticky="ew")
+        self.proxy_buttons_frame.grid_columnconfigure(0, weight=1)
+        self.proxy_buttons_frame.grid_columnconfigure(1, weight=1)
+        
+        # 添加启动代理按钮
+        self.start_proxy_button = ctk.CTkButton(self.proxy_buttons_frame, 
                                              text="启动代理", 
                                              command=self.start_proxy)
-        self.start_proxy_button.grid(row=4, column=0, padx=20, pady=5)
+        self.start_proxy_button.grid(row=0, column=0, padx=(0, 5), pady=5, sticky="ew")
+        
+        # 添加终止代理按钮
+        self.stop_proxy_button = ctk.CTkButton(self.proxy_buttons_frame, 
+                                            text="终止代理", 
+                                            command=self.stop_proxy,
+                                            fg_color="#D35B58",  # 设置红色背景
+                                            hover_color="#C64F45")  # 设置鼠标悬停颜色
+        self.stop_proxy_button.grid(row=0, column=1, padx=(5, 0), pady=5, sticky="ew")
         
         # 提示消息
         self.proxy_hint = ctk.CTkLabel(self.main_frame, 
@@ -96,7 +111,7 @@ class YuketangApp(ctk.CTk):
         self.step3_label.grid(row=6, column=0, padx=20, pady=(20, 5), sticky="w")
         
         # 选项处理选择
-        self.reorder_var = ctk.StringVar(value="n")
+        self.reorder_var = ctk.StringVar(value="y")
         self.reorder_frame = ctk.CTkFrame(self.main_frame)
         self.reorder_frame.grid(row=7, column=0, padx=20, pady=5, sticky="ew")
         
@@ -143,6 +158,33 @@ class YuketangApp(ctk.CTk):
         self.console.insert("end", "请在浏览器中配置代理：127.0.0.1:11000\n")
         self.console.insert("end", "然后访问雨课堂试卷页面...\n")
         self.console.configure(state="disabled")
+
+    def stop_proxy(self):
+        """终止mitmproxy代理"""
+        self.update_status("正在终止代理...", "orange")
+        
+        # 如果控制台为空，先添加一些信息
+        self.console.configure(state="normal")
+        if not self.console.get("1.0", "end").strip():
+            self.console.insert("end", f"==== 终止代理会话 [{time.strftime('%H:%M:%S')}] ====\n")
+            self.console.insert("end", "正在终止代理进程...\n")
+        else:
+            self.console.insert("end", "\n==== 终止代理会话 ====\n")
+        self.console.configure(state="disabled")
+        
+        # 确保输出重定向到控制台
+        if not self.old_stdout:
+            self.old_stdout = redirect_to_widget(self.console)
+        
+        # 终止代理
+        if ProxyManager.stop_proxy(self.update_status):
+            self.console.configure(state="normal")
+            self.console.insert("end", "代理已成功终止\n")
+            self.console.configure(state="disabled")
+        else:
+            self.console.configure(state="normal")
+            self.console.insert("end", "没有找到正在运行的代理进程\n")
+            self.console.configure(state="disabled")
     
     def process_json(self):
         """处理JSON数据并提取试卷内容"""
