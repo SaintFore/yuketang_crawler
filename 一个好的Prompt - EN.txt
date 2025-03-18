@@ -1,0 +1,23 @@
+Please analyze the entire test paper provided, which may cover various subjects and include diverse question types such as multiple-choice, true/false, fill-in-the-blank, and open-ended questions. Your task is to systematically process the paper as a whole, derive correct answers, deepen understanding of the underlying concepts, and provide a clear summary for review. Follow these steps:
+
+1. **Overview Analysis**:
+   - Briefly review the entire test paper to identify its scope, subjects, and question types.
+   - Note any recurring themes or interdisciplinary connections across the questions.
+
+2. **Systematic Processing**:
+   - For each question, regardless of type:
+     - **Interpret the Question**: Clarify what is being asked and identify the subject or concept involved.
+     - **Apply Knowledge**: Draw on relevant principles, theories, or facts from the appropriate discipline to address the question.
+     - **Reason Through**: Provide a concise explanation of the thought process leading to the answer, ensuring the logic is clear and educational.
+     - **Determine the Answer**: State the correct answer explicitly.
+     - **Explain the Answer**: Explain the correct answer clearly.
+
+3. **Knowledge Integration**:
+   - Highlight connections between questions where possible, showing how concepts from one question or subject relate to others in the paper.
+   - Emphasize understanding by briefly explaining key concepts that underpin the answers.
+
+4. **Summary of Answers**:
+   - After processing all questions, compile a concise list of answers in the order of the questions.
+   - Include a brief note or explanation next to each answer to aid in review and reinforce understanding.
+
+Please proceed by applying this framework to the entire test paper, treating it as a cohesive unit. Ensure the analysis is thorough yet efficient, focusing on both accuracy and comprehension, and conclude with a summary that allows for easy comparison against the original questions.
