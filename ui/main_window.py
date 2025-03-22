@@ -13,7 +13,7 @@ class YuketangApp(ctk.CTk):
         
         # 配置窗口
         self.title("雨课堂试卷提取工具")
-        self.geometry("600x500")
+        self.geometry("650x750")
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(0, weight=1)
         

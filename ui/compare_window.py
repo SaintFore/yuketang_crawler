@@ -12,7 +12,7 @@ class CompareApp(ctk.CTk):
         
         # 配置窗口
         self.title("雨课堂试卷对比工具")
-        self.geometry("650x580")
+        self.geometry("650x750")
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(0, weight=1)
         
@@ -30,6 +30,7 @@ class CompareApp(ctk.CTk):
         self.main_frame = ctk.CTkFrame(self)
         self.main_frame.grid(row=0, column=0, padx=20, pady=20, sticky="nsew")
         self.main_frame.grid_columnconfigure(0, weight=1)
+        self.main_frame.grid_rowconfigure(5, weight=1)  # 让包含控制台的行可以扩展
         
         # 标题
         self.title_label = ctk.CTkLabel(self.main_frame, 
@@ -68,8 +69,9 @@ class CompareApp(ctk.CTk):
         
         # 输出控制台
         console_frame = ctk.CTkFrame(self.main_frame)
-        console_frame.grid(row=5, column=0, padx=20, pady=10, sticky="ew")
+        console_frame.grid(row=5, column=0, padx=20, pady=10, sticky="nsew")
         console_frame.grid_columnconfigure(0, weight=1)
+        console_frame.grid_rowconfigure(1, weight=1)  # 添加这一行，让文本框可以扩展
         
         console_title = ctk.CTkLabel(console_frame,
                                   text="操作日志",
@@ -77,7 +79,7 @@ class CompareApp(ctk.CTk):
         console_title.grid(row=0, column=0, padx=10, pady=5, sticky="w")
         
         self.console = ctk.CTkTextbox(console_frame, height=150)
-        self.console.grid(row=1, column=0, padx=10, pady=5, sticky="ew")
+        self.console.grid(row=1, column=0, padx=10, pady=5, sticky="nsew")
         
     def _create_input_widgets(self):
         """创建输入框相关组件"""
