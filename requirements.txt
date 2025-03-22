@@ -1,3 +1,4 @@
 # 需要的依赖
 mitmproxy
 customtkinter
+# google-generativeai
