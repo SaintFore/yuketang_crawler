@@ -99,6 +99,16 @@ def extract_answers(json_file: str = None, output_dir: str = None) -> str:
         option_fields = sorted(list(all_option_keys))
         fieldnames.extend(option_fields)
         
+        # 修改输出路径到项目根目录下的雨课堂答案原始/
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        project_root = os.path.dirname(script_dir)
+        output_dir = os.path.join(project_root, "雨课堂答案原始")
+        
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+        
+        output_file = os.path.join(output_dir, f"试卷答案_{exam_id}.csv")
+        
         with open(output_file, 'w', newline='', encoding='utf-8-sig') as f:
             writer = csv.DictWriter(f, fieldnames=fieldnames)
             writer.writeheader()
