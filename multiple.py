@@ -150,7 +150,7 @@ def main():
                         help='包含答案CSV文件的目录 (默认: 雨课堂答案)')
     parser.add_argument('--original-file', type=str, default='雨课堂答案原始/试卷答案.csv',
                         help='原始试卷信息CSV文件 (默认: 雨课堂答案原始/试卷答案.csv)')
-    parser.add_argument('--reference', type=str, default='origin',
+    parser.add_argument('--r', type=str, default='origin',
                         help='参考用户名，在报告中显示为"你" (默认: origin)')
     parser.add_argument('--output', type=str, default='答案比对结果.txt',
                         help='输出报告文件名 (默认: 答案比对结果.txt)')
@@ -167,7 +167,7 @@ def main():
         return 1
     
     # 比较答案
-    report = compare_answers(args.answers_dir, args.original_file, args.reference)
+    report = compare_answers(args.answers_dir, args.original_file, args.r)
     
     if not report:
         print("没有找到需要比较的答案或所有答案一致")
