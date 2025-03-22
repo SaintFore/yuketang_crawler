@@ -2,6 +2,7 @@ import os
 import time
 import customtkinter as ctk
 from tools.json_handle import extract_problems
+from tools.json_save import extract_answers
 from utils.stdout_redirector import redirect_to_widget, restore_stdout
 from proxy.proxy_manager import ProxyManager
 
@@ -13,7 +14,7 @@ class YuketangApp(ctk.CTk):
         
         # 配置窗口
         self.title("雨课堂试卷提取工具")
-        self.geometry("650x750")
+        self.geometry("750x850")  
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(0, weight=1)
         
@@ -25,9 +26,14 @@ class YuketangApp(ctk.CTk):
         
     def _create_widgets(self):
         """创建UI组件"""
-        # 创建主框架
-        self.main_frame = ctk.CTkFrame(self)
-        self.main_frame.grid(row=0, column=0, padx=20, pady=20, sticky="nsew")
+        # 创建可滚动的主框架
+        self.scrollable_frame = ctk.CTkScrollableFrame(self)
+        self.scrollable_frame.grid(row=0, column=0, sticky="nsew")
+        self.scrollable_frame.grid_columnconfigure(0, weight=1)
+        
+        # 在可滚动框架内创建主框架
+        self.main_frame = ctk.CTkFrame(self.scrollable_frame)
+        self.main_frame.grid(row=0, column=0, sticky="ew")
         self.main_frame.grid_columnconfigure(0, weight=1)
         
         # 标题
@@ -45,15 +51,18 @@ class YuketangApp(ctk.CTk):
         # 第三步：处理JSON
         self._create_step3_widgets()
         
+        # 第四步：提取答案到CSV
+        self._create_step4_widgets()
+        
         # 状态显示区域
         self.status_label = ctk.CTkLabel(self.main_frame, 
                                       text="准备就绪", 
                                       font=ctk.CTkFont(size=14))
-        self.status_label.grid(row=9, column=0, padx=20, pady=(20, 0))
+        self.status_label.grid(row=12, column=0, padx=20, pady=(20, 0))  # 行号从9改为12
         
         # 输出控制台
         self.console = ctk.CTkTextbox(self.main_frame, height=100)
-        self.console.grid(row=10, column=0, padx=20, pady=10, sticky="ew")
+        self.console.grid(row=13, column=0, padx=20, pady=10, sticky="ew")  # 行号从10改为13
     
     def _create_step1_widgets(self):
         """创建步骤1相关的UI组件"""
@@ -129,6 +138,31 @@ class YuketangApp(ctk.CTk):
                                          command=self.process_json)
         self.process_button.grid(row=8, column=0, padx=20, pady=5)
     
+    def _create_step4_widgets(self):
+        """创建步骤4相关的UI组件"""
+        self.step4_label = ctk.CTkLabel(self.main_frame, 
+                                     text="步骤4: 提取答案到CSV", 
+                                     font=ctk.CTkFont(size=16))
+        self.step4_label.grid(row=9, column=0, padx=20, pady=(20, 5), sticky="w")
+        
+        # 输出目录提示
+        output_dir_frame = ctk.CTkFrame(self.main_frame)
+        output_dir_frame.grid(row=10, column=0, padx=20, pady=5, sticky="ew")
+        
+        output_dir_label = ctk.CTkLabel(output_dir_frame, 
+                                      text="答案将保存到: 雨课堂答案ID 目录", 
+                                      font=ctk.CTkFont(size=12),
+                                      text_color="gray60")
+        output_dir_label.grid(row=0, column=0, padx=10, pady=10, sticky="w")
+        
+        # 保存按钮
+        self.save_button = ctk.CTkButton(self.main_frame, 
+                                      text="提取答案到CSV", 
+                                      command=self.save_answers_to_csv,
+                                      fg_color="#2B7539",  # 绿色按钮
+                                      hover_color="#1E5C2C")
+        self.save_button.grid(row=11, column=0, padx=20, pady=10)
+
     def start_proxy(self):
         """启动mitmproxy代理"""
         exam_id = self.id_entry.get().strip()
@@ -217,3 +251,47 @@ class YuketangApp(ctk.CTk):
     def update_status(self, message, color="black"):
         """更新状态标签"""
         self.status_label.configure(text=message, text_color=color)
+
+    def save_answers_to_csv(self):
+        """保存试卷答案到CSV文件"""
+        self.update_status("正在提取答案数据...", "orange")
+        
+        # 清空控制台
+        self.console.configure(state="normal")
+        self.console.delete("0.0", "end")
+        self.console.insert("end", f"==== 提取答案数据 [{time.strftime('%H:%M:%S')}] ====\n")
+        self.console.configure(state="normal")  # 保持为normal以便写入
+        
+        # 重定向输出
+        redirect_info = redirect_to_widget(self.console)
+        
+        try:
+            # 获取试卷ID用于文件夹命名
+            exam_id = self.id_entry.get().strip()
+            
+            # 确定JSON文件路径
+            json_file = os.path.abspath("雨课堂文档/exam_data.json")
+            
+            if not os.path.exists(json_file):
+                self.update_status(f"找不到文件: {json_file}", "red")
+                print(f"错误: 找不到文件 {json_file}")
+                return
+            
+            # 创建输出目录
+            output_dir = f"雨课堂答案{exam_id}" if exam_id else "雨课堂答案"
+            
+            # 调用extract_answers函数
+            output_file = extract_answers(json_file, output_dir)
+            
+            if output_file:
+                self.update_status(f"答案已保存到: {output_file}", "green")
+            else:
+                self.update_status("未能提取答案数据", "red")
+                
+        except Exception as e:
+            self.update_status(f"处理数据时出错: {e}", "red")
+            print(f"错误详情: {e}")
+        finally:
+            # 恢复输出
+            if redirect_info:
+                restore_stdout(redirect_info)

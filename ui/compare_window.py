@@ -12,7 +12,7 @@ class CompareApp(ctk.CTk):
         
         # 配置窗口
         self.title("雨课堂试卷对比工具")
-        self.geometry("650x750")
+        self.geometry("750x850")
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(0, weight=1)
         

@@ -32,14 +32,7 @@ def extract_answers(json_file: str = None, output_dir: str = None) -> str:
     with open(json_file, 'r', encoding='utf-8') as f:
         data = json.load(f)
     
-    # 获取试卷ID
-    exam_id = ""
-    if "data" in data:
-        if "exam_id" in data["data"]:
-            exam_id = data["data"]["exam_id"]
-        elif "id" in data["data"]:
-            exam_id = data["data"]["id"]
-    
+
     # 获取题目列表
     problems = []
     if "data" in data and "problems" in data["data"]:
@@ -47,14 +40,14 @@ def extract_answers(json_file: str = None, output_dir: str = None) -> str:
     
     # 创建输出目录
     if output_dir is None:
-        output_dir = f"雨课堂答案{exam_id}" if exam_id else "雨课堂答案"
+        output_dir = f"雨课堂答案"
     
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
         print(f"创建输出目录: {output_dir}")
     
     # 准备CSV文件名
-    output_file = os.path.join(output_dir, f"试卷答案_{exam_id}.csv")
+    output_file = os.path.join(output_dir, f"试卷答案.csv")
     
     # 创建结果列表
     results = []
@@ -107,7 +100,7 @@ def extract_answers(json_file: str = None, output_dir: str = None) -> str:
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
         
-        output_file = os.path.join(output_dir, f"试卷答案_{exam_id}.csv")
+        output_file = os.path.join(output_dir, f"试卷答案.csv")
         
         with open(output_file, 'w', newline='', encoding='utf-8-sig') as f:
             writer = csv.DictWriter(f, fieldnames=fieldnames)
@@ -120,20 +113,3 @@ def extract_answers(json_file: str = None, output_dir: str = None) -> str:
         print("未能提取到任何题目信息")
         return None
 
-def main():
-    parser = argparse.ArgumentParser(description='从雨课堂JSON文件中提取题目信息并保存为CSV')
-    parser.add_argument('-f', '--file', type=str, help='JSON文件路径 (默认: 雨课堂文档/exam_data.json)')
-    parser.add_argument('-o', '--output', type=str, help='输出目录 (默认: 雨课堂答案ID)')
-    
-    args = parser.parse_args()
-    
-    try:
-        extract_answers(args.file, args.output)
-    except Exception as e:
-        print(f"错误: {e}")
-        return 1
-    
-    return 0
-
-if __name__ == "__main__":
-    main()
