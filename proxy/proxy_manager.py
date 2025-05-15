@@ -20,7 +20,7 @@ class ProxyManager:
         proxy = ProxySetting()
         proxy.enable = True
         proxy.server = "127.0.0.1:" + str(ProxyManager.default_port)
-        proxy.override = ["localhost", "127.*", "192.168.*", "10.*", "172.*"]
+        proxy.override = ["localhost;", "127.*;", "192.168.*;", "10.*;", "172.*;"]
         proxy.registry_write()
 
     @staticmethod
