@@ -5,6 +5,7 @@ import time
 import sys
 import socket
 import platform
+from winproxy import ProxySetting
 
 class ProxyManager:
     """管理mitmproxy代理进程"""
@@ -12,6 +13,22 @@ class ProxyManager:
     # 添加类变量来存储当前运行的进程
     current_process = None
     default_port = 11000
+    
+    @staticmethod
+    def proxy_open():
+        """启用系统代理"""
+        proxy = ProxySetting()
+        proxy.enable = True
+        proxy.server = "127.0.0.1:" + str(ProxyManager.default_port)
+        proxy.override = ["localhost", "127.*", "192.168.*", "10.*", "172.*"]
+        proxy.registry_write()
+
+    @staticmethod
+    def proxy_off():
+        """禁用系统代理"""
+        proxy = ProxySetting()
+        proxy.enable = False
+        proxy.registry_write()
     
     @staticmethod
     def is_port_in_use(port):
@@ -68,6 +85,8 @@ class ProxyManager:
         """
         def run_proxy():
             try:
+                ProxyManager.proxy_open()
+                sys.stdout.write("[代理] 系统代理已启用\n")
                 # 检查端口是否被占用
                 port = ProxyManager.default_port
                 if ProxyManager.is_port_in_use(port):
@@ -213,6 +232,8 @@ class ProxyManager:
             status_callback (function): 状态更新回调函数
         """
         try:
+            ProxyManager.proxy_off()
+            sys.stdout.write("[代理] 系统代理已禁用\n")
             if ProxyManager.current_process:
                 sys.stdout.write("[终止] 正在终止代理进程...\n")
                 sys.stdout.flush()
