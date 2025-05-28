@@ -1,0 +1,10 @@
+# 开发环境依赖
+# 包含所有生产依赖以及开发工具
+
+-r requirements.txt
+
+# 开发工具
+autopep8
+pylint
+black
+flake8
