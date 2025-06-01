@@ -3,6 +3,7 @@ import customtkinter as ctk
 from ui.tabs.extract_tab import ExtractTab
 from ui.tabs.compare_tab import CompareTab
 from ui.tabs.multi_compare_tab import MultiCompareTab
+from proxy.proxy_manager import ProxyManager
 
 
 class UnifiedYuketangApp(ctk.CTk):
@@ -19,7 +20,16 @@ class UnifiedYuketangApp(ctk.CTk):
         
         # 创建UI组件
         self._create_widgets()
-        
+
+        # 设置窗口关闭时的处理
+        self.protocol("WM_DELETE_WINDOW", self.on_closing)
+
+
+    def on_closing(self):
+        """窗口关闭时的处理函数"""
+        ProxyManager.proxy_restore()
+        self.destroy()
+
     def _create_widgets(self):
         """创建UI组件"""
         # 创建标题区域
